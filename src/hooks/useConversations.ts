@@ -1,5 +1,4 @@
 'use client';
-import useFetch from './useFetch';
 
 export type Conversation = {
     id: string;

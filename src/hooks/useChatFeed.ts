@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type Sender = 'user' | 'contact' | 'system';
 export type Kind = 'note' | 'event' | 'text';
@@ -15,7 +15,7 @@ export interface FeedMessage {
 
 type ApiComment = { id: number; name: string; email: string; body: string };
 
-const PAGE_SIZE = 30; // tune as you like
+const PAGE_SIZE = 30;
 
 export default function useChatFeed(conversationId: string) {
     const [messages, setMessages] = useState<FeedMessage[]>([]);
@@ -58,7 +58,9 @@ export default function useChatFeed(conversationId: string) {
     };
 
     useEffect(() => {
+        const controller = new AbortController();
         let alive = true;
+
         (async () => {
             try {
                 setLoading(true);
@@ -68,7 +70,7 @@ export default function useChatFeed(conversationId: string) {
 
                 const res = await fetch(
                     `https://jsonplaceholder.typicode.com/comments?_start=0&_limit=${PAGE_SIZE}`,
-                    { cache: 'no-store' }
+                    { cache: 'no-store', signal: controller.signal }
                 );
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data: ApiComment[] = await res.json();
@@ -80,29 +82,43 @@ export default function useChatFeed(conversationId: string) {
                 setMessages(chunk);
                 setHasMore(true);
                 fetchedPages.current.add(0);
-            } catch (e: any) {
+            } catch (e: unknown) {
                 if (!alive) return;
-                setError(e?.message || 'Failed to load messages');
-                setMessages([]);
+                // ignore abort errors
+                const message =
+                    e instanceof DOMException && e.name === 'AbortError'
+                        ? null
+                        : e instanceof Error
+                            ? e.message
+                            : String(e);
+                if (message) {
+                    setError(message);
+                    setMessages([]);
+                }
             } finally {
                 if (alive) setLoading(false);
             }
         })();
-        return () => { alive = false; };
+
+        return () => {
+            alive = false;
+            controller.abort();
+        };
     }, [conversationId]);
 
     const fetchOlder = useCallback(async () => {
         if (loadingOlder) return;
-        const nextPage = (page ?? 0) + 1;
+        const nextPage = page + 1;
         if (fetchedPages.current.has(nextPage)) return;
 
+        const controller = new AbortController();
         try {
             setLoadingOlder(true);
 
             const start = nextPage * PAGE_SIZE;
             const res = await fetch(
                 `https://jsonplaceholder.typicode.com/comments?_start=${start}&_limit=${PAGE_SIZE}`,
-                { cache: 'no-store' }
+                { cache: 'no-store', signal: controller.signal }
             );
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data: ApiComment[] = await res.json();
@@ -112,12 +128,21 @@ export default function useChatFeed(conversationId: string) {
                 return;
             }
 
-            const now = Date.now() - nextPage * 3_600_000;
+            const now = Date.now() - nextPage * 3_600_000; // space older pages an hour apart
             const chunk = mapChunk(data, now);
 
             setMessages(prev => [...chunk, ...prev]);
             fetchedPages.current.add(nextPage);
             setPage(nextPage);
+        } catch (e: unknown) {
+            // optional: surface error for older loads
+            const message =
+                e instanceof DOMException && e.name === 'AbortError'
+                    ? null
+                    : e instanceof Error
+                        ? e.message
+                        : String(e);
+            if (message) setError(prev => prev ?? message);
         } finally {
             setLoadingOlder(false);
         }

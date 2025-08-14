@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-    User, Phone, Mail, MapPin, Globe, MoreVertical, Plus,
-    Languages, Info, PhoneCall, Clock, Settings,
+    User, Globe, MoreVertical, Plus,
+    Info, PhoneCall, Clock, Settings,
     PanelRightClose, PanelLeftClose, ExternalLink, X,
 } from 'lucide-react';
 
@@ -12,24 +12,15 @@ import Dropdown, { type Option } from './ui/Dropdown';
 import FlagBD from './flags/FlagBD';
 import ManageContactModal from './ui/ManageContactModal';
 
-interface ContactField {
-    id: string;
-    label: string;
-    value: string;
-    type: 'text' | 'email' | 'phone' | 'select' | 'textarea';
-    required: boolean;
-    icon: any;
-}
-
 interface ContactDetailsProps {
     onClose: () => void;
     isMobile?: boolean;
 }
 
-const PANEL_W = 352;         // default content width (resizable)
-const PANEL_W_MIN = 280;     // clamp
-const PANEL_W_MAX = 640;     // clamp
-const RAIL_W = 48;           // right action rail (fixed)
+const PANEL_W = 352;
+const PANEL_W_MIN = 280;
+const PANEL_W_MAX = 640;
+const RAIL_W = 48;
 
 const panelBg = 'bg-[#222225]';
 const headerBg = 'bg-[#222225]';
@@ -108,7 +99,7 @@ export default function ContactDetails({ onClose, isMobile = false }: ContactDet
             document.body.style.userSelect = '';
             document.body.style.cursor = '';
         };
-    }, []);
+    }, [onResizeEnd]);
 
     // ====== MOBILE RENDER (restored) ======
     if (isMobile) {

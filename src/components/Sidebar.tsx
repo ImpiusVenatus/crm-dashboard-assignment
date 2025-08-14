@@ -19,7 +19,6 @@ const Sidebar = ({
     collapsed,
     onToggleCollapse,
     fullWidth = false,
-    isMobile = false,
     onBackToChat,
 }: SidebarProps) => {
     const [expanded, setExpanded] = useState({ lifecycle: true, team: true, custom: true });

@@ -16,7 +16,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import useConversations from '../hooks/useConversations';
-import type { Conversation } from '../hooks/useConversations';
+import Image from 'next/image';
 
 interface ConversationListProps {
     onSelectConversation: (conversationId: string) => void;
@@ -256,9 +256,11 @@ const ConversationList = ({
                                         <div className="flex items-start gap-3">
                                             {/* Contact Avatar */}
                                             <div className="relative flex-shrink-0">
-                                                <img
+                                                <Image
                                                     src={conversation.contact.avatar}
                                                     alt={conversation.contact.name}
+                                                    width={100}
+                                                    height={100}
                                                     className="w-10 h-10 rounded-full"
                                                 />
                                                 <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-[#222225] ${conversation.contact.status === 'online' ? 'bg-[#22c55e]' :

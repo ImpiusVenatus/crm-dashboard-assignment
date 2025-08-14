@@ -17,28 +17,6 @@ import {
     User,
 } from 'lucide-react';
 
-type ItemKey =
-    | 'topPurple'
-    | 'dashboard'
-    | 'bag'
-    | 'contacts'
-    | 'announce'
-    | 'network'
-    | 'analytics'
-    | 'settings'
-    | 'profile'
-    | 'bell'
-    | 'faq'
-    | 'doubleTick';
-
-type RailItem = {
-    key: ItemKey;
-    icon: LucideIcon;
-    label: string;
-    active?: boolean;
-    tint?: 'blue' | 'purple';
-};
-
 const palette = {
     railBg: 'bg-[#101113]',
     railBorder: 'border-r border-[#1c2330]',

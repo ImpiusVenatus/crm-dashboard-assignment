@@ -5,7 +5,6 @@ import {
     Timer,
     Phone,
     MoreHorizontal,
-    MoreVertical, // kept if you still use it elsewhere
     ChevronRight,
     ChevronDown,
     FileText,
@@ -13,6 +12,7 @@ import {
     Info,
 } from 'lucide-react';
 import useChatMessages from '../hooks/useChatMessages';
+import Image from 'next/image';
 
 interface ChatTopBarProps {
     onShowContactDetails: () => void;
@@ -43,9 +43,11 @@ const ChatTopBar = ({ onShowContactDetails, isMobile = false, conversationId }: 
                 <div className="flex items-center gap-3">
                     {/* Contact avatar */}
                     {conversation ? (
-                        <img
+                        <Image
                             src={contactAvatar}
                             alt={contactName}
+                            width={100}
+                            height={100}
                             className="w-7 h-7 rounded-full"
                         />
                     ) : (
