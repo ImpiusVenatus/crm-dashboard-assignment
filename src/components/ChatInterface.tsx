@@ -10,15 +10,20 @@ import {
     CheckCircle2,
     MessageCircle,
 } from 'lucide-react';
-import useChatMessages from '../hooks/useChatMessages';
-import type { ChatMessage } from '../hooks/useChatMessages';
+
+interface Message {
+    id: string;
+    text: string;
+    sender: 'user' | 'contact' | 'system';
+    timestamp: Date;
+    kind: 'note' | 'event' | 'text';
+}
 
 interface ChatInterfaceProps {
     conversationId: string;
-    isMobile?: boolean;
 }
 
-const ChatInterface = ({ conversationId, isMobile = false }: ChatInterfaceProps) => {
+const ChatInterface = ({ conversationId }: ChatInterfaceProps) => {
     // palette tuned to your screenshot
     const panelBg = 'bg-[#101113]';
     const border = 'border-[#2a2f36]';
@@ -26,8 +31,81 @@ const ChatInterface = ({ conversationId, isMobile = false }: ChatInterfaceProps)
     const strong = 'text-[#e6eaf2]';
     const dim = 'text-[#7b8696]';
 
-    // Fetch chat messages using the hook
-    const { messages, conversation, loading, error } = useChatMessages(conversationId);
+    const messages: Message[] = useMemo(
+        () => [
+            {
+                id: 'm1',
+                text: '@Faisal BH What are ypu doing',
+                sender: 'contact',
+                timestamp: new Date('2025-08-11T23:59:00'),
+                kind: 'text',
+            },
+            {
+                id: 'm2',
+                text: 'Conversation closed by you',
+                sender: 'system',
+                timestamp: new Date('2025-08-11T23:59:00'),
+                kind: 'event',
+            },
+            {
+                id: 'm3',
+                text: 'Conversation opened by you',
+                sender: 'system',
+                timestamp: new Date('2025-08-11T23:59:00'),
+                kind: 'event',
+            },
+            {
+                id: 'm4',
+                text: 'Conversation closed by you',
+                sender: 'system',
+                timestamp: new Date('2025-08-11T23:59:00'),
+                kind: 'event',
+            },
+            {
+                id: 'm5',
+                text: 'You unassigned this person',
+                sender: 'system',
+                timestamp: new Date('2025-08-11T23:59:00'),
+                kind: 'note',
+            },
+            {
+                id: 'm6',
+                text: 'Assigned to you',
+                sender: 'system',
+                timestamp: new Date('2025-08-11T23:59:00'),
+                kind: 'note',
+            },
+            {
+                id: 'm7',
+                text: 'Yesterday',
+                sender: 'system',
+                timestamp: new Date('2025-08-10T00:00:00'),
+                kind: 'note',
+            },
+            {
+                id: 'm8',
+                text: 'Lifecycle Stage New Lead updated to Hot Lead by you',
+                sender: 'system',
+                timestamp: new Date('2025-08-10T00:00:00'),
+                kind: 'event',
+            },
+            {
+                id: 'm9',
+                text: 'Lifecycle Stage Hot Lead updated to Payment by you',
+                sender: 'system',
+                timestamp: new Date('2025-08-10T00:00:00'),
+                kind: 'event',
+            },
+            {
+                id: 'm10',
+                text: 'Lifecycle Stage Payment updated to Customer by you',
+                sender: 'system',
+                timestamp: new Date('2025-08-10T00:00:00'),
+                kind: 'event',
+            },
+        ],
+        []
+    );
 
     const fmtTime = (d: Date) =>
         d.toLocaleString('en-US', {
@@ -46,64 +124,25 @@ const ChatInterface = ({ conversationId, isMobile = false }: ChatInterfaceProps)
     const isPillNote = (t: string) =>
         t === 'Yesterday' ||
         /^Assigned to you$/i.test(t) ||
-        /^You unassigned this person$/i.test(t) ||
-        /^Contact (created|assigned|updated)/i.test(t) ||
-        /^Previous conversation history loaded$/i.test(t);
-
-    if (loading) {
-        return (
-            <div className={`flex-1 ${panelBg} flex flex-col min-w-0 ${!isMobile ? `border-l ${border}` : ''}`}>
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5aa8ff] mx-auto mb-4"></div>
-                        <p className="text-sm text-[#8e98a8]">Loading conversation...</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    if (error || !conversation) {
-        return (
-            <div className={`flex-1 ${panelBg} flex flex-col min-w-0 ${!isMobile ? `border-l ${border}` : ''}`}>
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="text-center">
-                        <MessageCircle className="w-12 h-12 text-[#8e98a8] mx-auto mb-4" />
-                        <p className="text-sm text-[#8e98a8]">Unable to load conversation</p>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+        /^You unassigned this person$/i.test(t);
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25 }}
-            className={`flex-1 ${panelBg} flex flex-col min-h-0 ${!isMobile ? `border-l ${border}` : ''}`}
+            className={`flex-1 ${panelBg} flex flex-col min-w-0 border-l ${border}`}
         >
-            {/* Scrollable messages area - takes remaining space */}
-            <div
-                id="chat-scroll"
-                className={`flex-1 overflow-y-auto ${isMobile ? 'px-3' : 'px-4'} py-3 space-y-3 min-h-0`}
-                style={{ height: 'calc(100vh - 200px)' }}
-            >
+            {/* Scrollable messages */}
+            <div id="chat-scroll" className="flex-1 overflow-y-auto min-h-0 px-4 py-3 space-y-3">
                 {/* --- Top timeline header: faint line + date chip layered on top --- */}
                 <div className="relative w-full">
                     <div className={`text-xs ${dim} text-center truncate px-6 select-none`}>
-                        {conversation.lastActivity.toLocaleDateString('en-US', {
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric'
-                        })} • by you
+                        Aug 11, 2025 • by you
                     </div>
                     <div className="absolute left-1/2 -translate-x-1/2 -top-2">
                         <span className="px-3 py-1 rounded-md text-xs bg-[#2a2f36] text-[#c3cad6]">
-                            {conversation.lastActivity.toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric'
-                            })}
+                            Aug 11, 2025
                         </span>
                     </div>
                 </div>
@@ -120,52 +159,22 @@ const ChatInterface = ({ conversationId, isMobile = false }: ChatInterfaceProps)
                                 className="flex items-start gap-2 justify-end"
                             >
                                 {/* bubble */}
-                                <div className={`max-w-xl ${isMobile ? 'max-w-[85%]' : ''}`}>
+                                <div className="max-w-xl">
                                     <div className="rounded-xl bg-[#3F3322] text-white px-3 py-2 rounded-br-md">
-                                        <span className="text-sm text-[#4288FF]">@{conversation.contact.name}</span>{' '}
-                                        <span className="text-sm opacity-90">{m.text}</span>
+                                        <span className="text-sm text-[#4288FF]">@Faisal BH</span>{' '}
+                                        <span className="text-sm opacity-90">What are ypu doing</span>
                                     </div>
                                     <div className={`mt-1 text-right text-xs ${dim}`}>{fmtTime(m.timestamp)}</div>
                                 </div>
 
                                 {/* avatar: contact icon with yellow message badge */}
                                 <div className="relative shrink-0">
-                                    <img
-                                        src={conversation.contact.avatar}
-                                        alt={conversation.contact.name}
-                                        className="w-7 h-7 rounded-full"
-                                    />
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#5b7bff] to-[#8a5bff] flex items-center justify-center text-white">
+                                        <User className="w-4 h-4" />
+                                    </div>
                                     <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-[#3F3322] flex items-center justify-center ring-2 ring-[#101113]">
                                         <MessageSquare className="w-2 h-2 text-[#fbbf24]" />
                                     </div>
-                                </div>
-                            </motion.div>
-                        );
-                    }
-
-                    // USER message bubble — LEFT aligned
-                    if (m.sender === 'user' && m.kind === 'text') {
-                        return (
-                            <motion.div
-                                key={m.id}
-                                initial={{ opacity: 0, y: 8 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.02, duration: 0.18 }}
-                                className="flex items-start gap-2"
-                            >
-                                {/* avatar: user icon */}
-                                <div className="relative shrink-0">
-                                    <div className="w-7 h-7 rounded-full bg-[#1f3bff]/25 border border-[#2b3e75] flex items-center justify-center">
-                                        <User className="w-4 h-4 text-[#5aa8ff]" />
-                                    </div>
-                                </div>
-
-                                {/* bubble */}
-                                <div className={`max-w-xl ${isMobile ? 'max-w-[85%]' : ''}`}>
-                                    <div className="rounded-xl bg-[#1f2632] text-white px-3 py-2 rounded-bl-md">
-                                        <span className="text-sm opacity-90">{m.text}</span>
-                                    </div>
-                                    <div className={`mt-1 text-left text-xs ${dim}`}>{fmtTime(m.timestamp)}</div>
                                 </div>
                             </motion.div>
                         );
@@ -179,7 +188,7 @@ const ChatInterface = ({ conversationId, isMobile = false }: ChatInterfaceProps)
                                 initial={{ opacity: 0, y: 6 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.02, duration: 0.16 }}
-                                className={`w-full text-center text-sm ${soft} ${isMobile ? 'px-2' : ''}`}
+                                className={`w-full text-center text-sm ${soft}`}
                             >
                                 {m.text}
                             </motion.div>
@@ -213,7 +222,7 @@ const ChatInterface = ({ conversationId, isMobile = false }: ChatInterfaceProps)
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.02, duration: 0.18 }}
-                                className={`w-full border ${border} rounded-xl px-3 py-2 ${isMobile ? 'mx-2' : ''}`}
+                                className={`w-full border ${border} rounded-xl px-3 py-2`}
                             >
                                 <div className="flex items-center gap-2">
                                     <div className="relative shrink-0">
@@ -237,7 +246,7 @@ const ChatInterface = ({ conversationId, isMobile = false }: ChatInterfaceProps)
                             initial={{ opacity: 0, y: 6 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.02, duration: 0.16 }}
-                            className={`w-full text-center text-sm ${soft} ${isMobile ? 'px-2' : ''}`}
+                            className={`w-full text-center text-sm ${soft}`}
                         >
                             {m.text}
                         </motion.div>
@@ -245,10 +254,10 @@ const ChatInterface = ({ conversationId, isMobile = false }: ChatInterfaceProps)
                 })}
             </div>
 
-            {/* Fixed bottom section with action buttons - ALWAYS VISIBLE */}
-            <div className={`flex-shrink-0 ${isMobile ? 'px-3' : 'px-4'} py-2 border-t ${border} bg-[#101113]`}>
-                {/* "No Channels Selected" card section */}
-                <div className={`mx-auto w-full my-2 bg-[#222225] border border-[#3A3B3E] rounded-xl ${isMobile ? 'mx-2' : ''}`}>
+            {/* Footer actions */}
+            <div className="px-4 py-2">
+                {/* “No Channels Selected” card section */}
+                <div className="mx-auto w-full my-2 bg-[#222225] border border-[#3A3B3E] rounded-xl">
                     <div className={`flex items-center justify-between px-2 py-1 ${soft}`}>
                         <div className="flex items-center gap-1 pt-2">
                             <span className="text-xs">No Channels Selected</span>
@@ -283,7 +292,7 @@ const ChatInterface = ({ conversationId, isMobile = false }: ChatInterfaceProps)
                     </div>
                 </div>
 
-                {/* Action buttons with icons on the left - ALWAYS VISIBLE */}
+                {/* Action buttons with icons on the left */}
                 <div className="flex items-center justify-between">
                     <button className={`flex items-center gap-2 ${soft} hover:text-[#e6eaf2] cursor-pointer`}>
                         <MessageSquare className="w-4 h-4" />
