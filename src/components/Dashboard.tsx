@@ -13,7 +13,7 @@ import MobileRailMenu from './MobileRailMenu';
 
 const Dashboard = () => {
     const [selectedConversation, setSelectedConversation] = useState<string | null>('1');
-    const [showContactDetails, setShowContactDetails] = useState(false);
+    const [showContactDetails, setShowContactDetails] = useState(true);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [conversationListWidth, setConversationListWidth] = useState(400);
 
