@@ -3,39 +3,28 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Users,
-    Search,
-    ChevronDown,
-    Zap,
-    Target,
-    DollarSign,
-    UserCheck,
-    Globe,
-    Plus,
-    PanelLeftClose,
-    PanelRightClose,
-    Inbox,
-    User,
-    UserMinus,
-    PhoneIncoming
+    Users, Search, ChevronDown, Zap, Target, DollarSign, UserCheck, Globe, Plus,
+    PanelLeftClose, PanelRightClose, Inbox, User, UserMinus, PhoneIncoming, ChevronLeft
 } from 'lucide-react';
 
 interface SidebarProps {
     collapsed: boolean;
     onToggleCollapse: () => void;
+    fullWidth?: boolean;
+    isMobile?: boolean;
+    onBackToChat?: () => void;
 }
 
-const Sidebar = ({ collapsed, onToggleCollapse }: SidebarProps) => {
-    const [expanded, setExpanded] = useState({
-        lifecycle: true,
-        team: true,
-        custom: true,
-    });
+const Sidebar = ({
+    collapsed,
+    onToggleCollapse,
+    fullWidth = false,
+    isMobile = false,
+    onBackToChat,
+}: SidebarProps) => {
+    const [expanded, setExpanded] = useState({ lifecycle: true, team: true, custom: true });
+    const toggle = (k: keyof typeof expanded) => setExpanded(p => ({ ...p, [k]: !p[k] }));
 
-    const toggle = (key: keyof typeof expanded) =>
-        setExpanded((p) => ({ ...p, [key]: !p[key] }));
-
-    // Color Palette
     const bg = 'bg-[#222225]';
     const border = 'border border-[#2a2f36]';
     const strongText = 'text-[#d7dce6]';
@@ -47,52 +36,70 @@ const Sidebar = ({ collapsed, onToggleCollapse }: SidebarProps) => {
         { icon: UserCheck, label: 'Customer', emoji: '🧑‍💼', color: 'text-[#b390ff]' },
     ];
 
+    const targetWidth = fullWidth ? '100%' : (collapsed ? 64 : 320);
+
     return (
         <motion.aside
-            initial={{ width: collapsed ? 64 : 320 }}
-            animate={{ width: collapsed ? 64 : 320 }}
+            initial={{ width: targetWidth }}
+            animate={{ width: targetWidth }}
             transition={{ duration: 0.35, ease: 'easeInOut' }}
-            className={`${bg} ${border} border-l-0 border-t-0 border-b-0 flex flex-col flex-shrink-0 overflow-hidden overflow-x-hidden`}
+            /* 👇 ensure the sidebar itself stretches to the parent’s height */
+            className={`h-full ${bg} ${border} border-l-0 border-t-0 border-b-0 flex flex-col flex-shrink-0 overflow-hidden min-w-0`}
+            style={{ width: fullWidth ? '100%' : undefined }}
         >
             {/* Header */}
             <div className={`flex-shrink-0 ${border} border-x-0 border-t-0`}>
                 <div className="p-3">
                     <div className="flex items-center justify-between">
-                        {!collapsed ? (
+                        {fullWidth ? (
+                            <>
+                                <div className="flex items-center gap-2">
+                                    {onBackToChat && (
+                                        <button
+                                            onClick={onBackToChat}
+                                            className="px-2 py-1.5 flex items-center text-sm text-[#5aa8ff] hover:text-[#8ab4ff] hover:bg-[#1a2029] rounded-md transition-colors"
+                                            title="Back to Chat"
+                                        >
+                                            <ChevronLeft className="w-4 h-4 mr-1" />
+                                            Back to Chat
+                                        </button>
+                                    )}
+                                    <h2 className={`text-sm font-semibold ${strongText}`}>Inbox</h2>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Search className="w-4 h-4 text-[#7b8696] hover:text-[#cfd6e3] cursor-pointer" />
+                                </div>
+                            </>
+                        ) : !collapsed ? (
                             <>
                                 <h2 className={`text-sm font-semibold ${strongText}`}>Inbox</h2>
                                 <div className="flex items-center gap-2">
-                                    {/* Bottom: bell + collapse toggle */}
                                     <Search className="w-4 h-4 text-[#7b8696] hover:text-[#cfd6e3] cursor-pointer" />
                                     <motion.div
                                         className={`flex-shrink-0 ${border} border-x-0 border-b-0 p-3`}
                                         animate={{ padding: collapsed ? 12 : 16 }}
                                         transition={{ duration: 0.3, ease: 'easeInOut' }}
                                     >
-                                        <div className={`flex items-center ${collapsed ? 'justify-end' : 'justify-between'}`}>
-
-
+                                        <div className="flex items-center justify-between">
                                             <motion.button
                                                 whileHover={{ opacity: 0.85 }}
                                                 whileTap={{ opacity: 0.7 }}
                                                 onClick={onToggleCollapse}
-                                                title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+                                                title="Collapse Sidebar"
                                                 className="text-[#8e98a8] hover:text-[#e7ecf5]"
                                             >
-                                                {collapsed ? <PanelRightClose /> : <PanelLeftClose />}
+                                                <PanelLeftClose />
                                             </motion.button>
                                         </div>
                                     </motion.div>
-
                                 </div>
                             </>
                         ) : (
-                            // Collapsed: keep a subtle dot so height doesn’t jump
                             <motion.button
                                 whileHover={{ opacity: 0.85 }}
                                 whileTap={{ opacity: 0.7 }}
                                 onClick={onToggleCollapse}
-                                title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+                                title="Expand Sidebar"
                                 className="text-[#8e98a8] hover:text-[#e7ecf5] p-3"
                             >
                                 <PanelRightClose />
@@ -102,10 +109,11 @@ const Sidebar = ({ collapsed, onToggleCollapse }: SidebarProps) => {
                 </div>
             </div>
 
-            {/* Main nav (icons only on collapse) */}
-            <div className="flex-1 overflow-y-auto overflow-x-hidden px-3 py-2">
+            {/* Main (scroll area) */}
+            {/* 👇 allow this region to actually fill and scroll within the full-height aside */}
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 py-2">
                 <AnimatePresence initial={false}>
-                    {!collapsed && (
+                    {(!collapsed || fullWidth) && (
                         <motion.div
                             key="filters"
                             initial={{ opacity: 0, y: 12, height: 0 }}
@@ -126,7 +134,7 @@ const Sidebar = ({ collapsed, onToggleCollapse }: SidebarProps) => {
                                         <div
                                             key={f.label}
                                             className={`flex items-center gap-2 text-[11px] px-2 py-1.5 rounded-md cursor-pointer transition-colors
-            ${f.active ? 'bg-[#363C45] text-white' : 'text-[#8e98a8] hover:text-[#cbd3e0] hover:bg-[#363C45]'}`}
+                      ${f.active ? 'bg-[#363C45] text-white' : 'text-[#8e98a8] hover:text-[#cbd3e0] hover:bg-[#363C45]'}`}
                                         >
                                             <Icon className="w-4 h-4 text-[#7b8696]" />
                                             <span>{f.label}</span>
@@ -135,30 +143,23 @@ const Sidebar = ({ collapsed, onToggleCollapse }: SidebarProps) => {
                                 })}
                             </div>
                         </motion.div>
-
                     )}
                 </AnimatePresence>
 
                 {/* Lifecycle */}
                 <AnimatePresence initial={false}>
-                    {!collapsed && (
+                    {(!collapsed || fullWidth) && (
                         <motion.div
                             key="lifecycle"
                             initial={{ opacity: 0, y: 12, height: 0 }}
                             animate={{ opacity: 1, y: 0, height: 'auto' }}
                             exit={{ opacity: 0, y: 8, height: 0 }}
                             transition={{ duration: 0.22 }}
-                            className={`rounded-xl p-3 mb-3`}
+                            className="rounded-xl p-3 mb-3"
                         >
-                            <button
-                                onClick={() => toggle('lifecycle')}
-                                className="w-full flex items-center justify-between"
-                            >
+                            <button onClick={() => toggle('lifecycle')} className="w-full flex items-center justify-between">
                                 <h3 className={`text-[12px] font-semibold ${strongText}`}>Lifecycle</h3>
-                                <motion.div
-                                    animate={{ rotate: expanded.lifecycle ? 180 : 0 }}
-                                    transition={{ duration: 0.16 }}
-                                >
+                                <motion.div animate={{ rotate: expanded.lifecycle ? 180 : 0 }} transition={{ duration: 0.16 }}>
                                     <ChevronDown className="w-4 h-4 text-[#7b8696]" />
                                 </motion.div>
                             </button>
@@ -195,94 +196,52 @@ const Sidebar = ({ collapsed, onToggleCollapse }: SidebarProps) => {
 
                 {/* Team Inbox */}
                 <AnimatePresence initial={false}>
-                    {!collapsed && (
+                    {(!collapsed || fullWidth) && (
                         <motion.div
                             key="team"
                             initial={{ opacity: 0, y: 12, height: 0 }}
                             animate={{ opacity: 1, y: 0, height: 'auto' }}
                             exit={{ opacity: 0, y: 8, height: 0 }}
                             transition={{ duration: 0.22 }}
-                            className={`rounded-xl p-3 mb-3`}
+                            className="rounded-xl p-3 mb-3"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Users className="w-4 h-4 text-[#7b8696]" />
                                     <h3 className={`text-[12px] font-semibold ${strongText}`}>Team Inbox</h3>
                                 </div>
-                                <button
-                                    onClick={() => toggle('team')}
-                                    className="flex items-center gap-1 text-[11px] text-[#7b8696] hover:text-[#cfd6e3]"
-                                >
+                                <button className="flex items-center gap-1 text-[11px] text-[#7b8696] hover:text-[#cfd6e3]">
                                     <Plus className="w-4 h-4" />
-                                    <motion.span
-                                        animate={{ rotate: expanded.team ? 180 : 0 }}
-                                        transition={{ duration: 0.16 }}
-                                    >
-                                        <ChevronDown className="w-4 h-4" />
-                                    </motion.span>
+                                    <ChevronDown className="w-4 h-4" />
                                 </button>
                             </div>
-
-                            <AnimatePresence initial={false}>
-                                {expanded.team && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.18 }}
-                                        className="mt-2 text-[11px] text-[#8e98a8] px-2 py-1.5 rounded-md bg-transparent"
-                                    >
-                                        No inboxes created
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                            <div className="mt-2 text-[11px] text-[#8e98a8] px-2 py-1.5 rounded-md">No inboxes created</div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
                 {/* Custom Inbox */}
                 <AnimatePresence initial={false}>
-                    {!collapsed && (
+                    {(!collapsed || fullWidth) && (
                         <motion.div
                             key="custom"
                             initial={{ opacity: 0, y: 12, height: 0 }}
                             animate={{ opacity: 1, y: 0, height: 'auto' }}
                             exit={{ opacity: 0, y: 8, height: 0 }}
                             transition={{ duration: 0.22 }}
-                            className={`rounded-xl p-3`}
+                            className="rounded-xl p-3"
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                     <Globe className="w-4 h-4 text-[#7b8696]" />
                                     <h3 className={`text-[12px] font-semibold ${strongText}`}>Custom Inbox</h3>
                                 </div>
-                                <button
-                                    onClick={() => toggle('custom')}
-                                    className="flex items-center gap-1 text-[11px] text-[#7b8696] hover:text-[#cfd6e3]"
-                                >
+                                <button className="flex items-center gap-1 text-[11px] text-[#7b8696] hover:text-[#cfd6e3]">
                                     <Plus className="w-4 h-4" />
-                                    <motion.span
-                                        animate={{ rotate: expanded.custom ? 180 : 0 }}
-                                        transition={{ duration: 0.16 }}
-                                    >
-                                        <ChevronDown className="w-4 h-4" />
-                                    </motion.span>
+                                    <ChevronDown className="w-4 h-4" />
                                 </button>
                             </div>
-
-                            <AnimatePresence initial={false}>
-                                {expanded.custom && (
-                                    <motion.div
-                                        initial={{ height: 0, opacity: 0 }}
-                                        animate={{ height: 'auto', opacity: 1 }}
-                                        exit={{ height: 0, opacity: 0 }}
-                                        transition={{ duration: 0.18 }}
-                                        className="mt-2 text-[11px] text-[#8e98a8] px-2 py-1.5 rounded-md"
-                                    >
-                                        No inboxes created
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
+                            <div className="mt-2 text-[11px] text-[#8e98a8] px-2 py-1.5 rounded-md">No inboxes created</div>
                         </motion.div>
                     )}
                 </AnimatePresence>
